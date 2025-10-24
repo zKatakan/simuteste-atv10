@@ -1,7 +1,8 @@
 import pytest
-import time
+from urllib.parse import quote
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 @pytest.mark.web
 @pytest.mark.parametrize("termo_busca", [
@@ -13,22 +14,17 @@ from selenium.webdriver.common.keys import Keys
 ])
 def test_busca_google(chrome_driver, termo_busca):
     d = chrome_driver
-    d.get("https://www.google.com")
-    # Aceita cookies/consentimento se aparecer (melhora estabilidade)
-    try:
-        d.find_element(By.TAG_NAME, "body")
-        time.sleep(1)
-        buttons = d.find_elements(By.TAG_NAME, "button")
-        for b in buttons:
-            if "Aceitar" in b.text or "Accept" in b.text:
-                b.click()
-                break
-    except Exception:
-        pass
+    # Abre direto a SERP, evitando a homepage/consentimento
+    q = quote(termo_busca)
+    d.get(f"https://www.google.com/search?q={q}&hl=pt-BR")
 
-    box = d.find_element(By.NAME, "q")
-    box.send_keys(termo_busca)
-    box.send_keys(Keys.ENTER)
+    # Espera o container principal de resultados
+    wait = WebDriverWait(d, 15)
+    wait.until(EC.presence_of_element_located((By.ID, "search")))
 
-    time.sleep(2)
-    assert termo_busca.lower() in d.page_source.lower()
+    # Validação robusta: título contém o termo (mais estável que page_source)
+    assert termo_busca.lower() in d.title.lower()
+
+    # (Opcional) fallback extra — pelo menos 1 resultado orgânico visível
+    resultados = d.find_elements(By.CSS_SELECTOR, "div#search h3")
+    assert len(resultados) > 0
