@@ -18,8 +18,6 @@ Este repositório contém a solução completa dos exercícios:
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
-# Linux/Mac
-source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
@@ -31,8 +29,6 @@ Para rodar os testes Web sem abrir janela do navegador:
 set HEADLESS=true
 # PowerShell
 $env:HEADLESS="true"
-# Linux/Mac
-export HEADLESS=true
 ```
 
 ## Execução
